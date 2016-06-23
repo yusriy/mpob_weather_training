@@ -48,15 +48,17 @@ rm(vpd, vpd_daily, vpd_monthly)
 #### Wind rose ####
 windRose(w_data, ws = 'WindSpd_ms_Avg', wd = 'WindDir_Avg', paddle = FALSE)
 
-#### Barplot ####
-
-plot(w_data_monthly$date,w_data_monthly$Rain_mm_Tot, type = 'l', ylim = c(0, 4),
-     ylab = 'Cumulative rain (mm)', xlab = 'Month')
-
-plot(w_data$date,w_data$Rain_mm_Tot, type ='l')
-
-barplot(w_data_monthly$Rain_mm_Tot, type = 'l', ylim = c(0, 4),
-        ylab = 'Cumulative rain (mm)', xlab = 'Month', col = 'white')
-box()
+#### Plots ####
+# Monthly rain
+plot(w_data_monthly$date,w_data_monthly$Rain_mm_Tot, type = 'o', ylim = c(0, 4),
+     ylab = 'Cumulative rain (mm)', xlab = 'Month', main = 'Monthly rain')
+# Temperature
+plot(w_data_monthly$date,w_data_monthly$AirTempC_Avg, 
+     type = 'o',
+     ylab = 'Temperature (C)', xlab = 'Month', main = 'Monthly temperature')
+# Vapor pressure deficit
+plot(w_data_monthly$date,w_data_monthly$vpd_monthly, 
+     type = 'o',
+     ylab = 'VPD (kPa)', xlab = 'Month', main = 'Monthly vapor pressure deficit')
 
 
