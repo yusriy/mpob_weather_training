@@ -4,9 +4,9 @@
 # Version: 1.0
 #
 
-
 #### Preliminaries ####
 library(openair)
+source('R/vap_deficit.R')
 
 #### Data import ####
 # Import the data
@@ -32,16 +32,18 @@ w_data_monthly <- timeAverage(w_data, avg.time = 'month')
 w_data_daily <- timeAverage(w_data, avg.time = 'day')
 
 #### Calculate vapor pressure deficit ####
-# Temporary air temperature variable in K
-Temp <- w_data_monthly$AirTempC_Avg
-RH <- w_data_monthly$RelHum_Avg
-# Saturate vapor pressure, units of kPa
-# From the ASCE Standardized Reference Evapotranspiration Equation
-vpsat <- 0.6108 * exp(17.27 * Temp / (Temp + 237.3))
-# Actual partial pressure, units of kPa
-vpair <- vpsat * RH/100
-# Vapor pressure deficit, units of kPa
-vpd <- vpsat - vpair
+# Hourly average of vpd
+vpd <- vap_deficit(w_data$AirTempC_Avg, w_data$RelHum_Avg)
+# Daily average of vpd
+vpd_daily <- vap_deficit(w_data_daily$AirTempC_Avg, w_data_daily$RelHum_Avg)
+# Monthly average of vpd
+vpd_monthly <- vap_deficit(w_data_monthly$AirTempC_Avg, 
+                           w_data_monthly$RelHum_Avg)
+# Combine with data frame
+w_data <- cbind(w_data, vpd)
+w_data_daily <- cbind(w_data_daily, vpd_daily)
+w_data_monthly <- cbind(w_data_monthly, vpd_monthly)
+rm(vpd, vpd_daily, vpd_monthly)
 
 #### Wind rose ####
 windRose(w_data, ws = 'WindSpd_ms_Avg', wd = 'WindDir_Avg', paddle = FALSE)
