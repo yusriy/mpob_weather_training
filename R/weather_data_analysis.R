@@ -5,15 +5,14 @@
 #
 
 
-## Preliminaries ####
+#### Preliminaries ####
 library(openair)
-## Data import ####
 
+#### Data import ####
 # Import the data
 w_data <- read.csv(file = 'data/penor_2011_2013.csv', sep = ',', skip = 1)
 # Remove 1st and 2nd row
 w_data <- w_data[-c(1,2),]
-
 # Change to all numeric
 for (i in 2:ncol(w_data)){
   w_data[,i] <- as.character(w_data[,i])
@@ -21,7 +20,6 @@ for (i in 2:ncol(w_data)){
 for (i in 2:ncol(w_data)){
   w_data[,i] <- as.numeric(w_data[,i])
 }
-
 # Format time
 w_data$TIMESTAMP <- strptime(w_data$TIMESTAMP,format = '%m/%d/%y %H:%M')
 w_data$TIMESTAMP <- as.POSIXct(w_data$TIMESTAMP)
@@ -29,24 +27,26 @@ w_data$TIMESTAMP <- as.POSIXct(w_data$TIMESTAMP)
 names(w_data)[1] <- 'date'
 rm(i)
 
-## Analysis ####
-# Averaging
+#### Averaging ####
 w_data_monthly <- timeAverage(w_data, avg.time = 'month')
 w_data_daily <- timeAverage(w_data, avg.time = 'day')
 
-# Wind rose
+#### Calculate vapor pressure deficit ####
+# Temporary air temperature variable in K
+Temp <- w_data_monthly$AirTempC_Avg
+RH <- w_data_monthly$RelHum_Avg
+# Saturate vapor pressure, units of kPa
+# From the ASCE Standardized Reference Evapotranspiration Equation
+vpsat <- 0.6108 * exp(17.27 * Temp / (Temp + 237.3))
+# Actual partial pressure, units of kPa
+vpair <- vpsat * RH/100
+# Vapor pressure deficit, units of kPa
+vpd <- vpsat - vpair
+
+#### Wind rose ####
 windRose(w_data, ws = 'WindSpd_ms_Avg', wd = 'WindDir_Avg', paddle = FALSE)
 
-# Calculate vapor pressure deficit
-A <- 1.88 * 10^4
-B <- -13.1
-C <- -1.5 * 10^(-2)
-D <- 8 * 10^(-7)
-E <- -1.69 * 10^(-11)
-F <- 6.456
-vpsat <- exp()
-
-# Barplot
+#### Barplot ####
 
 plot(w_data_monthly$date,w_data_monthly$Rain_mm_Tot, type = 'l', ylim = c(0, 4),
      ylab = 'Cumulative rain (mm)', xlab = 'Month')
