@@ -1,11 +1,11 @@
-#### Calculate evapotranspiration using the Penman-Monteith equation
-ET <- function(Tmin, # Min temperature in C 
-               Tmax,  # Max temperature in C
-               solar_rad, # Solar radiation in W m-2 day-1
-               wind_speed, # Wind speed in m s-1, must be measured > 2 m
-               z, # Elevation above ground level for atm pressure calc
-               RHmax, # Maximum relative humidity %
-               RHmin, # Minimum relative humidity %
+#### Calculate evapotranspiration using the Penman-Monteith model
+ET <- function(Tmin,        # Min temperature in C 
+               Tmax,        # Max temperature in C
+               solar_rad,   # Solar radiation in W m-2 day-1
+               wind_speed,  # Wind speed in m s-1, must be measured > 2 m height
+               z,           # Elevation above ground level for atm pressure calc.
+               RHmax,       # Maximum relative humidity %
+               RHmin,       # Minimum relative humidity %
                ) {
   # Calculate average day temperature
   meanT <- (Tmin + Tmax) / 2
@@ -28,6 +28,5 @@ ET <- function(Tmin, # Min temperature in C
   es <- (eTmax + eTmin) / 2
   # Actual vapor pressure (ea) derived from relative humidity
   ea <- (eTmin * (RHmax/100) + eTmax(RHmin/100)) / 2
-  
   
 }
