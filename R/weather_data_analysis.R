@@ -8,6 +8,7 @@
 library(openair)
 source('R/vap_deficit.R')
 source('R/julian_conv.R')
+source('R/ET.R')
 
 #### Data import ####
 # Import the data
@@ -57,11 +58,35 @@ vpd_daily <- vap_deficit(w_data_daily$AirTempC_Avg, w_data_daily$RelHum_Avg)
 # Monthly average of vpd
 vpd_monthly <- vap_deficit(w_data_monthly$AirTempC_Avg, 
                            w_data_monthly$RelHum_Avg)
+
+#### Calculate evapotranspiration ####
+# Can only calculate from daily and monthly averaged values
+et_daily <- ET(j = w_data_daily$`round(jd)`,
+               Tmin = w_data_daily$AirTempC_Min,
+               Tmax = w_data_daily$AirTempC_Max,
+               solar_rad = w_data_daily$SlrRad_W_Avg,
+               wind_speed = w_data_daily$WindSpd_ms_Avg,
+               z = 2,
+               RHmax = w_data_daily$RelHum_Max,
+               RHmin = w_data_daily$RelHum_Min,
+               lat_deg = 5,
+               a = 0.23)
+et_monthly <- ET(j = w_data_monthly$`round(jd)`,
+                 Tmin = w_data_monthly$AirTempC_Min,
+                 Tmax = w_data_monthly$AirTempC_Max,
+                 solar_rad = w_data_monthly$SlrRad_W_Avg,
+                 wind_speed = w_data_monthly$WindSpd_ms_Avg,
+                 z = 2,
+                 RHmax = w_data_monthly$RelHum_Max,
+                 RHmin = w_data_monthly$RelHum_Min,
+                 lat_deg = 5,
+                 a = 0.23)
+
 # Combine with data frame
 w_data <- cbind(w_data, vpd)
-w_data_daily <- cbind(w_data_daily, vpd_daily)
-w_data_monthly <- cbind(w_data_monthly, vpd_monthly)
-rm(vpd, vpd_daily, vpd_monthly)
+w_data_daily <- cbind(w_data_daily, vpd_daily, et_daily)
+w_data_monthly <- cbind(w_data_monthly, vpd_monthly, et_monthly)
+rm(vpd, vpd_daily, vpd_monthly, et_daily, et_monthly)
 
 #### Wind rose ####
 windRose(w_data, ws = 'WindSpd_ms_Avg', wd = 'WindDir_Avg', paddle = FALSE)
@@ -78,5 +103,9 @@ plot(w_data_monthly$date,w_data_monthly$AirTempC_Avg,
 plot(w_data_monthly$date,w_data_monthly$vpd_monthly, 
      type = 'o',
      ylab = 'VPD (kPa)', xlab = 'Month', main = 'Monthly vapor pressure deficit')
+# Evapotranspiration
+plot(w_data_monthly$date,w_data_monthly$et_monthly, 
+     type = 'o',
+     ylab = 'ET (mm day-1)', xlab = 'Month', main = 'Monthly evapotranspiration')
 
 
