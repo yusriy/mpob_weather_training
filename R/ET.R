@@ -28,5 +28,9 @@ ET <- function(Tmin,        # Min temperature in C
   es <- (eTmax + eTmin) / 2
   # Actual vapor pressure (ea) derived from relative humidity
   ea <- (eTmin * (RHmax/100) + eTmax(RHmin/100)) / 2
+  # Calculate the inverse relative distance Earth-Sun (dr) and 
+  # solar declination (del)
+  dr <- 1 + 0.033 * cos((2 * j * pi)/365)
+  
   
 }

@@ -7,6 +7,7 @@
 #### Preliminaries ####
 library(openair)
 source('R/vap_deficit.R')
+source('R/julian_conv.R')
 
 #### Data import ####
 # Import the data
@@ -27,9 +28,26 @@ w_data$TIMESTAMP <- as.POSIXct(w_data$TIMESTAMP)
 names(w_data)[1] <- 'date'
 rm(i)
 
+
 #### Averaging ####
 w_data_monthly <- timeAverage(w_data, avg.time = 'month')
 w_data_daily <- timeAverage(w_data, avg.time = 'day')
+
+#### Julian da ####
+# Calculate julian day for hourly data
+jd <- sapply(w_data$date, julian_conv)
+w_data <- cbind(jd,w_data)
+rm(jd)
+
+# Calculate julian day for daily data
+jd <- sapply(w_data_daily$date, julian_conv)
+w_data_daily <- cbind(round(jd), w_data_daily)
+rm(jd)
+
+# Calculate julian day for monthly data
+jd <- sapply(w_data_monthly$date, julian_conv)
+w_data_monthly <- cbind(round(jd), w_data_monthly)
+rm(jd)
 
 #### Calculate vapor pressure deficit ####
 # Hourly average of vpd
