@@ -33,32 +33,14 @@ w_data$TIMESTAMP <- as.POSIXct(w_data$TIMESTAMP)
 names(w_data)[1] <- 'date'
 rm(i)
 
+
+#### Data quality checks ####
+# To be done in class
+
 #### Averaging ####
 # Note that rain is also averaged though the sum is needed
 w_data_monthly <- timeAverage(w_data, avg.time = 'month')
 w_data_daily <- timeAverage(w_data, avg.time = 'day')
-
-#### Cumulative rain (but just for rain) ####
-# Sum the daily rain
-rain_daily <- w_data %>%
-  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
-           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m'),
-           day = format(as.POSIXct(cut(date, breaks = 'day')), '%d')) %>%
-  summarize(rain_daily_tot = sum(Rain_mm_Tot, na.rm = TRUE))
-# Add the dates in POSIX format
-date <- paste(rain_daily$year, rain_daily$month, rain_daily$day, sep = '-')
-date <- as.POSIXlt(date)
-rain_daily <- cbind(date, rain_daily)
-
-# Sum the monthly rain
-rain_monthly <- w_data %>%
-  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
-           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m')) %>%
-  summarize(rain_monthly_tot = sum(Rain_mm_Tot, na.rm = TRUE))
-date <- paste(rain_monthly$year, rain_monthly$month, '01', sep = '-')
-date <- as.POSIXlt(date)
-rain_monthly <- cbind(date, rain_monthly)
-rm(date)
 
 #### Julian day ####
 # Calculate julian day for hourly data
@@ -79,6 +61,7 @@ names(w_data_monthly)[1] <- 'jd'
 rm(jd)
 
 #### Calculate vapor pressure deficit ####
+# Assuming we use average air temperature, might change to max air temperature
 # Hourly average of vpd
 vpd <- vap_deficit(w_data$AirTempC_Avg, w_data$RelHum_Avg)
 # Daily average of vpd
@@ -116,6 +99,65 @@ w_data_daily <- cbind(w_data_daily, vpd_daily, et_daily)
 w_data_monthly <- cbind(w_data_monthly, vpd_monthly, et_monthly)
 rm(vpd, vpd_daily, vpd_monthly, et_daily, et_monthly)
 
+#### Cumulative rain (but just for rain) ####
+# Sum the daily rain
+rain_daily <- w_data %>%
+  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
+           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m'),
+           day = format(as.POSIXct(cut(date, breaks = 'day')), '%d')) %>%
+  summarize(rain_daily_tot = sum(Rain_mm_Tot, na.rm = TRUE))
+# Add the dates in POSIX format
+date <- paste(rain_daily$year, rain_daily$month, rain_daily$day, sep = '-')
+date <- as.POSIXlt(date)
+rain_daily <- cbind(date, rain_daily)
+
+# Sum the monthly rain
+rain_monthly <- w_data %>%
+  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
+           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m')) %>%
+  summarize(rain_monthly_tot = sum(Rain_mm_Tot, na.rm = TRUE))
+date <- paste(rain_monthly$year, rain_monthly$month, '01', sep = '-')
+date <- as.POSIXlt(date)
+rain_monthly <- cbind(date, rain_monthly)
+
+#### Mean max T ####
+# Mean maximum temperature between 0900 and 1300 daily
+maxT_0900_1300 <- w_data
+maxT_0900_1300 <- selectByDate(maxT_0900_1300,start=maxT_0900_1300$date[1],
+                               end=maxT_0900_1300$date[nrow(maxT_0900_1300)],
+                               hour=1:5) # Because hour 1 GMT is 9 MYT
+maxT_0900_1300$date <- maxT_0900_1300$date + (8 * 60 * 60) # Change it to MYT
+maxT_daily <- maxT_0900_1300 %>%
+  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
+           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m'),
+           day = format(as.POSIXct(cut(date, breaks = 'day')), '%d'))%>%
+  summarize(maxT_0900_1300 = mean(AirTempC_Max, na.rm = TRUE))
+
+# Add the dates in POSIX format
+date <- paste(maxT_daily$year, maxT_daily$month, maxT_daily$day, sep = '-')
+date <- as.POSIXlt(date)
+maxT_daily <- cbind(date, maxT_daily)
+rm(maxT_0900_1300)
+
+#### Max VPD ####
+# Mean maximum temperature between 0900 and 1300 daily
+maxVPD_0900_1300 <- w_data
+maxVPD_0900_1300 <- selectByDate(maxVPD_0900_1300,start=maxVPD_0900_1300$date[1],
+                                 end=maxVPD_0900_1300$date[nrow(maxVPD_0900_1300)],
+                                 hour=1:5) # Because hour 1 GMT is 9 MYT
+maxVPD_0900_1300$date <- maxVPD_0900_1300$date + (8 * 60 * 60) # Change it to MYT
+maxVPD_daily <- maxVPD_0900_1300 %>%
+  group_by(year = format(as.POSIXct(cut(date, breaks = 'year')), '%Y'),
+           month = format(as.POSIXct(cut(date, breaks = 'month')), '%m'),
+           day = format(as.POSIXct(cut(date, breaks = 'day')), '%d'))%>%
+  summarize(maxVPD_0900_1300 = max(vpd, na.rm = TRUE))
+
+# Add the dates in POSIX format
+date <- paste(maxVPD_daily$year, maxVPD_daily$month, maxVPD_daily$day, sep = '-')
+date <- as.POSIXlt(date)
+maxVPD_daily <- cbind(date, maxVPD_daily)
+rm(maxVPD_0900_1300,date)
+
 #### Descriptive statistics ####
 summary(w_data)
 summary(w_data_daily)
@@ -128,7 +170,7 @@ summary(w_data_monthly)
 format_date <- '%Y-%m-%d %H:%M:%S'
 # You can specify the start and end dates here to plot
 date1 <- '2011-04-01 00:00:00'
-date2 <- '2011-12-30 00:00:00'
+date2 <- '2011-05-30 00:00:00'
 
 ## Time series plot
 # Daily cumulative rain
@@ -149,6 +191,23 @@ plot(rain_monthly$date, rain_monthly$rain_monthly_tot, type = 'o',
 axis.POSIXct(side = 1, at = rain_monthly$date, 
              labels = format(rain_monthly$date, '%m'))
 
+# Daily mean max T between 0900 and 1300
+plot(maxT_daily$date, maxT_daily$maxT_0900_1300, type = 'o', 
+     xaxt = 'n', xlab = 'Date',
+     ylab = 'Mean max T (C)',
+     xlim = c(as.POSIXct(date1, format = format_date), 
+              as.POSIXct(date2, format = format_date)))
+axis.POSIXct(side = 1, at = maxT_daily$date, 
+             labels = format(maxT_daily$date, '%m/%d'))
+
+# Daily max VPD between 0900 and 1300
+plot(maxVPD_daily$date, maxVPD_daily$maxVPD_0900_1300, type = 'o', 
+     xaxt = 'n', xlab = 'Date',
+     ylab = 'Max VPD (kPa)',
+     xlim = c(as.POSIXct(date1, format = format_date), 
+              as.POSIXct(date2, format = format_date)))
+axis.POSIXct(side = 1, at = maxT_daily$date, 
+             labels = format(maxT_daily$date, '%m/%d'))
 
 ## Monthly averaged 
 # Monthly averaged temperature
