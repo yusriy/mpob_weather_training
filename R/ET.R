@@ -2,8 +2,8 @@
 ET <- function(j,           # Julian day
                Tmin,        # Min temperature [C] 
                Tmax,        # Max temperature [C]
-               solar_rad,   # Solar radiation [W m-2 day-1]
-               wind_speed,  # Wind speed [m s-1], must be measured > 2 m height
+               solar_rad,   # Avg solar radiation [W m-2 day-1]
+               wind_speed,  # Avg wind speed [m s-1], must be measured > 2 m height
                z,           # Elevation above ground level for atm pressure calc.
                             # [m]
                RHmax,       # Maximum relative humidity [%]
@@ -38,8 +38,11 @@ ET <- function(j,           # Julian day
   pt <- lambda/(delta + (lambda * (1 + (0.34 * wind_speed))))
   
   ## Mean saturation vapor pressure derived from air temperature (es)
+  # Max vapor pressure at max temperature
   eTmax <- 0.6108 * exp((17.27 * Tmax)/(Tmax + 237.3))
+  # Minimum vapor pressure at min temperature
   eTmin <- 0.6108 * exp((17.27 * Tmin)/(Tmin + 237.3))
+  # Saturated vapor pressure
   es <- (eTmax + eTmin) / 2
   # Actual vapor pressure (ea) derived from relative humidity
   ea <- (eTmin * (RHmax/100) + eTmax * (RHmin/100)) / 2
@@ -91,6 +94,5 @@ ET <- function(j,           # Julian day
   ET0 <- ETrad + ETwind # [mm day-1]
   
   return(ET0)
-  
   
 }

@@ -1,18 +1,19 @@
 #### Weather station data analysis ####
-# Author: Yusri Yusup
+# Author: Yusri Yusup, PhD
+# Affiliation: Universiti Sains Malaysia
 # Date created: 2016-06-22
 # Version: 1.0
 #
 
 #### Preliminaries ####
 library(openair)
-source('R/vap_deficit.R')
-source('R/julian_conv.R')
-source('R/ET.R')
+source('R/vap_deficit.R') # To calculate vapor pressure deficit [kPa]
+source('R/julian_conv.R') # To calculate julian day
+source('R/ET.R') # To calculate evapotranspiration [mm time-1]
 
 #### Data import ####
 # Import the data
-w_data <- read.csv(file = 'data/penor_2011_2013.csv', sep = ',', skip = 1)
+w_data <- read.csv(file = file.choose(), sep = ',', skip = 1)
 # Remove 1st and 2nd row
 w_data <- w_data[-c(1,2),]
 # Change to all numeric
@@ -34,7 +35,7 @@ rm(i)
 w_data_monthly <- timeAverage(w_data, avg.time = 'month')
 w_data_daily <- timeAverage(w_data, avg.time = 'day')
 
-#### Julian da ####
+#### Julian day ####
 # Calculate julian day for hourly data
 jd <- sapply(w_data$date, julian_conv)
 w_data <- cbind(jd,w_data)
@@ -66,21 +67,21 @@ et_daily <- ET(j = w_data_daily$`round(jd)`,
                Tmax = w_data_daily$AirTempC_Max,
                solar_rad = w_data_daily$SlrRad_W_Avg,
                wind_speed = w_data_daily$WindSpd_ms_Avg,
-               z = 2,
+               z = 2, # Assuming the measured wind is at 2 m
                RHmax = w_data_daily$RelHum_Max,
                RHmin = w_data_daily$RelHum_Min,
-               lat_deg = 5,
-               a = 0.23)
+               lat_deg = 5, # Assuming the latitude of the station is at 5 deg
+               a = 0.23) # Albedo reference evapotranspiration for grass surface 
 et_monthly <- ET(j = w_data_monthly$`round(jd)`,
                  Tmin = w_data_monthly$AirTempC_Min,
                  Tmax = w_data_monthly$AirTempC_Max,
                  solar_rad = w_data_monthly$SlrRad_W_Avg,
                  wind_speed = w_data_monthly$WindSpd_ms_Avg,
-                 z = 2,
+                 z = 2, # Assuming the measured wind is at 2 m
                  RHmax = w_data_monthly$RelHum_Max,
                  RHmin = w_data_monthly$RelHum_Min,
-                 lat_deg = 5,
-                 a = 0.23)
+                 lat_deg = 5, # Assuming the latitude of the station is at 5 deg
+                 a = 0.23) # Albedo reference evapotranspiration for grass surface
 
 # Combine with data frame
 w_data <- cbind(w_data, vpd)
